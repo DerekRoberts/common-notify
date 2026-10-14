@@ -195,7 +195,8 @@ describe('EmailTemplateLayoutService', () => {
       // The preview's title is not bold, and the rule between the halves is 16px out either side.
       expect(result.body).not.toContain('font-weight:bold')
       expect(result.body).toContain('padding-right:16px')
-      expect(result.body).toContain('border-left:1px solid #d8d8d8;padding-left:16px;')    })
+      expect(result.body).toContain('border-left:1px solid #d8d8d8;padding-left:16px;')
+    })
 
     it('sits closer to its own rule than the message below it does', async () => {
       const result = await service.apply(template, rendered)
