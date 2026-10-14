@@ -29,24 +29,32 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v6
-      # charts/crunchy/values-prod.yml is a full copy of values.yml because
-      # action-crunchy takes a single values file, so there is no overlay to
-      # layer a one-line override onto. Duplicating a database config is only
-      # safe if the copies cannot silently diverge - storage class, backup
-      # config or the Postgres version drifting between environments is the
-      # failure this guards. Only the replica count may differ.
-      - name: Fail if the two files differ outside the replica count
+      # values-prod.yml and values-dev.yml are FULL COPIES of values.yml, because
+      # action-crunchy takes a single values file and there is no overlay to layer
+      # a short override onto. Duplicating a database config is only safe if the
+      # copies cannot silently diverge - a storage class, backup target or
+      # Postgres version drifting between environments is the fault that stays
+      # hidden until a restore. Only the replica count and the volume sizes may
+      # differ, and only those because prod runs a standby and dev needs a larger
+      # backup repo.
+      - name: Fail if the per-env files differ outside replicas and volume sizes
         run: |
-          DIFF=$(diff <(grep -vE '^\s*#' charts/crunchy/values.yml) \
-                      <(grep -vE '^\s*#' charts/crunchy/values-prod.yml) || true)
-          UNEXPECTED=$(echo "${DIFF}" | grep -E '^[<>]' | grep -vE 'replicas:' || true)
-          if [ -n "${UNEXPECTED}" ]; then
-            echo "::error title=Crunchy values drift::values.yml and values-prod.yml differ outside the replica count. Keep them identical except for crunchy.instances.replicas."
-            echo "${UNEXPECTED}"
-            exit 1
-          fi
-          echo "Only the replica count differs:"
-          echo "${DIFF}" | grep -E '^[<>]' || echo "  (identical)"
+          STATUS=0
+          for f in values-prod.yml values-dev.yml; do
+            DIFF=$(diff <(grep -vE '^\s*#' charts/crunchy/values.yml) \
+                        <(grep -vE '^\s*#' "charts/crunchy/${f}") || true)
+            UNEXPECTED=$(echo "${DIFF}" | grep -E '^[<>]' \
+              | grep -vE 'replicas:|storage:|walStorage:' || true)
+            if [ -n "${UNEXPECTED}" ]; then
+              echo "::error title=Crunchy values drift::values.yml and ${f} differ outside replicas/storage/walStorage."
+              echo "${UNEXPECTED}"
+              STATUS=1
+            else
+              echo "${f}: only replicas/storage differ:"
+              echo "${DIFF}" | grep -E '^[<>]' | sed 's/^/    /' || echo "    (identical)"
+            fi
+          done
+          exit ${STATUS}
 
   results:
     name: Validate Results
