@@ -286,8 +286,8 @@ pgbackrestHistoryPrune:
   #-- Sunday 09:30. Offset off the hour because the full backup runs at 08:00
   #-- and incrementals on every other hour.
   schedule: "30 9 * * 0"
-  #-- keep this many days of manifests; ~24 backups/day at ~115KB each, so 30
-  #-- days bounds history at roughly 80MB
-  retentionDays: 30
+  #-- keep this many days of manifests; ~24 backups/day at ~115KB each, so 14
+  #-- days bounds history at roughly 40MB
+  retentionDays: 14
   #-- in-cluster imagestream, so no Docker Hub pull and no rate limiting
   image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
