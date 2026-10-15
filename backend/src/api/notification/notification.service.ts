@@ -58,7 +58,7 @@ const notificationListQueryConfig: QueryableFieldsConfig = {
   defaultSort: [{ field: 'createdAt', direction: 'DESC' }],
 }
 
-const INTERNATIONAL_SMS_HINT =
+export const INTERNATIONAL_SMS_HINT =
   'Only Canadian numbers can be sent to unless International SMS is enabled for this tenant.'
 
 @Injectable()
