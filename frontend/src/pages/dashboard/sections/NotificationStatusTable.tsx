@@ -2,7 +2,13 @@ import { useNavigate } from '@tanstack/react-router'
 import type { FC } from 'react'
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { setPage, setSort, setFilter, selectNotifications } from '@/redux/slices/notification.slice'
+import {
+  setPage,
+  setSort,
+  setFilter,
+  selectNotifications,
+  selectHasNoNotifications,
+} from '@/redux/slices/notification.slice'
 import { setLimit } from '@/redux/slices/notification.slice'
 import { selectStatuses } from '@/redux/slices/codeTables.slice'
 import type { CodeTable } from '@/redux/slices/codeTables.slice'
@@ -14,7 +20,9 @@ import { DataTable } from '@/components/DataTable'
 import type { TableColumn } from '@/components/DataTable'
 import { StatusBadge } from '@/components/StatusBadge'
 import { ChannelBadge } from '@/components/ChannelBadge'
+import NoDataCard from '@/components/NoDataCard'
 import { showErrorToast } from '@/redux/utils/toastUtils'
+import { useCstarRoles } from '@/hooks/useCstarRoles'
 import { RecipientsCell } from './RecipientsCell'
 
 /**
@@ -30,6 +38,8 @@ const NotificationStatusTable: FC = () => {
   const notifications = useAppSelector(selectNotifications)
   const statuses = useAppSelector(selectStatuses)
   const selectedTenant = useAppSelector((state) => state.tenant.selectedTenant)
+  const hasNoNotifications = useAppSelector(selectHasNoNotifications)
+  const { canEdit } = useCstarRoles()
 
   // Get SSE flag status from Redux (no hook, just read the state)
   const sseEnabled = useAppSelector((state) => selectFeatureFlag(state, 'sse_notifications'))
@@ -136,6 +146,20 @@ const NotificationStatusTable: FC = () => {
       render: (_, row) => new Date(row.delayedSendTime ?? row.createdAt).toLocaleString(),
     },
   ]
+
+  // Rendered here rather than by the page so the fetch and SSE effects above stay mounted, and
+  // the table replaces the card as soon as the first notification arrives.
+  if (hasNoNotifications) {
+    return (
+      <NoDataCard
+        title="No notifications yet."
+        message="Notification history will appear here once notifications have been sent. To get started, create a notification event and send your first notification."
+        actionLabel="Create notification event"
+        actionTo="/events/create"
+        isActionDisabled={!canEdit}
+      />
+    )
+  }
 
   return (
     <div>
