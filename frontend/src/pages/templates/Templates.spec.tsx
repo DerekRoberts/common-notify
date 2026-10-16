@@ -104,6 +104,23 @@ describe('Templates', () => {
     expect(screen.getByRole('button', { name: 'Delete New Order Ready' })).toBeInTheDocument()
   })
 
+  it('shows the no-data card instead of the table when the tenant has no templates', () => {
+    setState([])
+    render(<Templates />)
+
+    expect(screen.getByText('No templates yet.')).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Create New Template' })).not.toBeInTheDocument()
+  })
+
+  it('keeps the table when a search matches no templates', () => {
+    setState([], { search: 'nothing' })
+    render(<Templates />)
+
+    expect(screen.queryByText('No templates yet.')).not.toBeInTheDocument()
+    expect(screen.getByRole('table')).toBeInTheDocument()
+  })
+
   it('disables Delete for users who cannot edit templates', () => {
     canEdit = false
     render(<Templates />)
