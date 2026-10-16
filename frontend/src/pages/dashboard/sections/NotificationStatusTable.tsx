@@ -5,11 +5,11 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import {
   setPage,
   setSort,
+  setLimit,
   setFilter,
   selectNotifications,
   selectHasNoNotifications,
 } from '@/redux/slices/notification.slice'
-import { setLimit } from '@/redux/slices/notification.slice'
 import { selectStatuses } from '@/redux/slices/codeTables.slice'
 import type { CodeTable } from '@/redux/slices/codeTables.slice'
 import { connectNotificationSSE, fetchNotifications } from '@/redux/thunks/notification.thunks'
