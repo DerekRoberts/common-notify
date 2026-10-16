@@ -168,7 +168,7 @@ const NotificationStatusTable: FC = () => {
         data={notifications ?? []}
         keyExtractor={(row) => row.id}
         onRowClick={(row) => goToRequestStatus(row.id)}
-        isLoading={isLoading && !hasLoaded}
+        isLoading={isLoading && (!hasLoaded || !notifications?.length)}
         emptyMessage="No notifications found"
         label="Notification Status"
         currentPage={page}

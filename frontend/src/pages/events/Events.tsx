@@ -97,7 +97,8 @@ const Events: FC = () => {
   const { canEdit } = useCstarRoles()
   const [searchInput, setSearchInput] = useState(search)
   // A search or filter that matches nothing still shows the table and its empty message.
-  const hasNoEvents = hasLoaded && count === 0 && !search && Object.keys(filters).length === 0
+  const hasNoEvents =
+    hasLoaded && !isLoading && count === 0 && !search && Object.keys(filters).length === 0
 
   useEffect(() => {
     if (selectedTenant) {
@@ -136,6 +137,11 @@ const Events: FC = () => {
     dispatch(setFilter({ field: key, values }))
   }
 
+  function clearSearch() {
+    setSearchInput('')
+    dispatch(setSearch(''))
+  }
+
   return (
     <div className="page">
       <PageHeading title="Notification Events" />
@@ -169,10 +175,12 @@ const Events: FC = () => {
             data={events}
             keyExtractor={(row) => row.id}
             emptyMessage="No events found"
+            search={search}
+            onClearSearch={clearSearch}
             currentPage={page}
             pageSize={limit}
             totalCount={count}
-            isLoading={isLoading && !hasLoaded}
+            isLoading={isLoading && (!hasLoaded || events.length === 0)}
             sortBy={sortBy ?? undefined}
             sortOrder={sortOrder}
             onSort={handleSort}

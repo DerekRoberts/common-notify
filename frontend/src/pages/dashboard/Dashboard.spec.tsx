@@ -226,7 +226,23 @@ describe('Dashboard with CodeTables', () => {
     expect(navigateMock).toHaveBeenCalledWith({ to: '/events/create' })
   })
 
-  it('keeps the table when a filter matches no notifications', () => {
+  it('holds off on the no-data card while notifications are refetching', () => {
+    const store = createStore({
+      ...preloadedState,
+      notification: { ...baseNotificationState, hasLoaded: true, isLoading: true },
+    })
+
+    render(
+      <Provider store={store}>
+        <Dashboard />
+      </Provider>,
+    )
+
+    expect(screen.queryByText('No notifications yet.')).not.toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: 'Loading...' })).toBeInTheDocument()
+  })
+
+  it('offers to clear a filter that matches no notifications', async () => {
     const store = createStore({
       ...preloadedState,
       notification: { ...baseNotificationState, hasLoaded: true, filters: { status: ['failed'] } },
@@ -239,7 +255,13 @@ describe('Dashboard with CodeTables', () => {
     )
 
     expect(screen.queryByText('No notifications yet.')).not.toBeInTheDocument()
-    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(
+      screen.getByRole('cell', { name: /^No data match the filters applied./ }),
+    ).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+
+    expect(store.getState().notification.filters).toEqual({})
   })
 
   it('should reflect updated code table statuses in the column filter options', async () => {

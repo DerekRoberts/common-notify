@@ -5,6 +5,7 @@ import { NotificationChannel, TemplateEngine } from '@/api/templates.api'
 import type * as TemplatesApi from '@/api/templates.api'
 import type { TemplateResponse } from '@/api/templates.api'
 import { showErrorToast, showSuccessToast } from '@/redux/utils/toastUtils'
+import { setFilter, setSearch } from '@/redux/slices/templates.slice'
 import Templates from './Templates'
 
 const dispatchMock = vi.fn()
@@ -113,12 +114,41 @@ describe('Templates', () => {
     expect(screen.queryByRole('button', { name: 'Create New Template' })).not.toBeInTheDocument()
   })
 
-  it('keeps the table when a search matches no templates', () => {
+  it('shows loading rather than the no-data card while a refetch is in flight', () => {
+    // e.g. just after Clear search: the empty rows are still the searched result
+    setState([], { isLoading: true })
+    render(<Templates />)
+
+    expect(screen.queryByText('No templates yet.')).not.toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: 'Loading...' })).toBeInTheDocument()
+  })
+
+  it('offers to clear a search that matches no templates', () => {
     setState([], { search: 'nothing' })
     render(<Templates />)
 
     expect(screen.queryByText('No templates yet.')).not.toBeInTheDocument()
-    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(
+      screen.getByRole('cell', { name: /^No results found. Try a different search./ }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear search' }))
+
+    expect(dispatchMock).toHaveBeenCalledWith(setSearch(''))
+  })
+
+  it('offers to clear filters that match no templates', () => {
+    setState([], { filters: { channelCode: ['SMS'], active: ['true'] } })
+    render(<Templates />)
+
+    expect(
+      screen.getByRole('cell', { name: /^No data match the filters applied./ }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+
+    expect(dispatchMock).toHaveBeenCalledWith(setFilter({ field: 'channelCode', values: [] }))
+    expect(dispatchMock).toHaveBeenCalledWith(setFilter({ field: 'active', values: [] }))
   })
 
   it('disables Delete for users who cannot edit templates', () => {

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import TablePaginationFooter from './pagination/TablePaginationFooter'
+import TableEmptyState, { getEmptyMessage } from './TableEmptyState'
+import type { NarrowedBy } from './TableEmptyState'
 import { Table } from './Table'
 import { TableBody } from './TableBody'
 import { TableCell } from './TableCell'
@@ -49,6 +51,9 @@ export interface TableProps<T> {
   isLoading?: boolean
   isEmpty?: boolean
   emptyMessage?: string
+  // Search: when set, an empty table offers to clear it (filters use activeFilters/onFilter)
+  search?: string
+  onClearSearch?: () => void
   // Accessibility
   label?: string
   // Styling
@@ -82,6 +87,8 @@ export function DataTable<T extends object>({
   isLoading = false,
   isEmpty,
   emptyMessage = 'No data available.',
+  search,
+  onClearSearch,
   currentPage,
   pageSize = 15,
   totalCount,
@@ -101,6 +108,20 @@ export function DataTable<T extends object>({
   data = data ?? []
 
   const showEmpty = !isLoading && (isEmpty || data.length === 0)
+  const filterKeys = Object.keys(activeFilters ?? {})
+  const narrowedBy: NarrowedBy | null =
+    search && onClearSearch ? 'search' : filterKeys.length > 0 && onFilter ? 'filter' : null
+  function clearNarrowing() {
+    if (narrowedBy === 'search') {
+      onClearSearch?.()
+    } else {
+      filterKeys.forEach((key) => onFilter?.(key, []))
+    }
+  }
+  // A search or filter that emptied the table: there are no pages to move between.
+  const showNarrowedEmpty = showEmpty && narrowedBy != null
+  const showPagination =
+    onPageChange != null && totalCount != null && currentPage != null && !showNarrowedEmpty
 
   function renderBodyContent() {
     if (isLoading) {
@@ -113,8 +134,16 @@ export function DataTable<T extends object>({
 
     if (showEmpty) {
       return (
-        <TableRow className="data-table__empty-row">
-          <TableCell colSpan={columns.length}>{emptyMessage}</TableCell>
+        <TableRow
+          className={`data-table__empty-row${showNarrowedEmpty ? ' data-table__empty-row--action' : ''}`}
+        >
+          <TableCell colSpan={columns.length}>
+            <TableEmptyState
+              narrowedBy={narrowedBy}
+              message={emptyMessage}
+              onClear={clearNarrowing}
+            />
+          </TableCell>
         </TableRow>
       )
     }
@@ -156,7 +185,7 @@ export function DataTable<T extends object>({
   const statusMessage = isLoading
     ? 'Loading'
     : showEmpty
-      ? emptyMessage
+      ? getEmptyMessage(narrowedBy, emptyMessage)
       : currentPage != null && totalCount != null
         ? (() => {
             const totalPages = Math.ceil(totalCount / pageSize)
@@ -201,15 +230,14 @@ export function DataTable<T extends object>({
           </TableRow>
         </TableHeader>
         <TableBody>{renderBodyContent()}</TableBody>
-        {(footerContent != null ||
-          (onPageChange != null && totalCount != null && currentPage != null)) && (
+        {(footerContent != null || showPagination) && (
           <TableFooter>
             {footerContent != null && (
               <TableRow>
                 <TableCell colSpan={columns.length}>{footerContent}</TableCell>
               </TableRow>
             )}
-            {onPageChange != null && totalCount != null && currentPage != null && (
+            {showPagination && (
               <TableRow>
                 <TableCell colSpan={columns.length} style={{ padding: 0 }}>
                   <TablePaginationFooter

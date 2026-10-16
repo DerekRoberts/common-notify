@@ -111,7 +111,8 @@ const Templates: FC = () => {
   const [dialog, setDialog] = useState<DeleteDialog | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   // A search or filter that matches nothing still shows the table and its empty message.
-  const hasNoTemplates = hasLoaded && count === 0 && !search && Object.keys(filters).length === 0
+  const hasNoTemplates =
+    hasLoaded && !isLoading && count === 0 && !search && Object.keys(filters).length === 0
 
   const columns: TableColumn<TemplateResponse>[] = [
     ...baseColumns,
@@ -156,6 +157,11 @@ const Templates: FC = () => {
 
   function handleFilter(key: string, values: string[]) {
     dispatch(setFilter({ field: key, values }))
+  }
+
+  function clearSearch() {
+    setSearchInput('')
+    dispatch(setSearch(''))
   }
 
   async function handleDeleteClick(row: TemplateResponse) {
@@ -224,10 +230,12 @@ const Templates: FC = () => {
             data={templates}
             keyExtractor={(row) => row.id}
             emptyMessage="No templates found"
+            search={search}
+            onClearSearch={clearSearch}
             currentPage={page}
             pageSize={limit}
             totalCount={count}
-            isLoading={isLoading && !hasLoaded}
+            isLoading={isLoading && (!hasLoaded || templates.length === 0)}
             sortBy={sortBy ?? undefined}
             sortOrder={sortOrder}
             onSort={handleSort}
