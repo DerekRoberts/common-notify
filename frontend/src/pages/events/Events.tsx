@@ -12,6 +12,7 @@ import SearchField from '@/components/SearchField'
 import DataTable from '@/components/DataTable/DataTable'
 import type { TableColumn } from '@/components/DataTable/DataTable'
 import { ChannelBadge } from '@/components/ChannelBadge'
+import NoDataCard from '@/components/NoDataCard'
 import { showErrorToast } from '@/redux/utils/toastUtils'
 import { useCstarRoles } from '@/hooks/useCstarRoles'
 import '@/scss/components/events.scss'
@@ -95,6 +96,8 @@ const Events: FC = () => {
   const selectedTenant = useAppSelector((state) => state.tenant.selectedTenant)
   const { canEdit } = useCstarRoles()
   const [searchInput, setSearchInput] = useState(search)
+  // A search or filter that matches nothing still shows the table and its empty message.
+  const hasNoEvents = hasLoaded && count === 0 && !search && Object.keys(filters).length === 0
 
   useEffect(() => {
     if (selectedTenant) {
@@ -137,39 +140,51 @@ const Events: FC = () => {
     <div className="page">
       <PageHeading title="Notification Events" />
 
-      <div className="page__toolbar">
-        <SearchField
-          value={searchInput}
-          onChange={setSearchInput}
-          onSearch={handleSearch}
-          placeholder="Search Notification Events..."
-          ariaLabel="Search events"
-        >
-          <Button onPress={() => navigate({ to: '/events/create' })} isDisabled={!canEdit}>
-            Create New Event
-          </Button>
-        </SearchField>
-      </div>
+      {hasNoEvents ? (
+        <NoDataCard
+          title="No notification events yet."
+          message="Notification events connect your notification templates, recipients, and delivery channels. Create your first event to start sending notifications."
+          actionLabel="Create notification event"
+          actionTo="/events/create"
+          isActionDisabled={!canEdit}
+        />
+      ) : (
+        <>
+          <div className="page__toolbar">
+            <SearchField
+              value={searchInput}
+              onChange={setSearchInput}
+              onSearch={handleSearch}
+              placeholder="Search Notification Events..."
+              ariaLabel="Search events"
+            >
+              <Button onPress={() => navigate({ to: '/events/create' })} isDisabled={!canEdit}>
+                Create New Event
+              </Button>
+            </SearchField>
+          </div>
 
-      <DataTable
-        columns={columns}
-        data={events}
-        keyExtractor={(row) => row.id}
-        emptyMessage="No events found"
-        currentPage={page}
-        pageSize={limit}
-        totalCount={count}
-        isLoading={isLoading && !hasLoaded}
-        sortBy={sortBy ?? undefined}
-        sortOrder={sortOrder}
-        onSort={handleSort}
-        activeFilters={filters}
-        onFilter={handleFilter}
-        onPageChange={(nextPage) => dispatch(setPage(nextPage))}
-        onPageSizeChange={handleLimitChange}
-        pageSizeOptions={[15, 30]}
-        label="Notification Events"
-      />
+          <DataTable
+            columns={columns}
+            data={events}
+            keyExtractor={(row) => row.id}
+            emptyMessage="No events found"
+            currentPage={page}
+            pageSize={limit}
+            totalCount={count}
+            isLoading={isLoading && !hasLoaded}
+            sortBy={sortBy ?? undefined}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+            activeFilters={filters}
+            onFilter={handleFilter}
+            onPageChange={(nextPage) => dispatch(setPage(nextPage))}
+            onPageSizeChange={handleLimitChange}
+            pageSizeOptions={[15, 30]}
+            label="Notification Events"
+          />
+        </>
+      )}
     </div>
   )
 }

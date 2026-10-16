@@ -181,11 +181,28 @@ describe('Events', () => {
       expect(await screen.findByText('Loading...')).toBeInTheDocument()
     })
 
-    it('says so when the tenant has no events', async () => {
+    it('shows the no-data card instead of the table when the tenant has no events', async () => {
       vi.mocked(getEvents).mockResolvedValue(pageOf([]))
       renderPage()
 
+      expect(await screen.findByText('No notification events yet.')).toBeInTheDocument()
+      expect(screen.queryByRole('table')).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Create New Event' })).not.toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: 'Create notification event' }))
+
+      expect(navigateMock).toHaveBeenCalledWith({ to: '/events/create' })
+    })
+
+    it('keeps the table when a search matches no events', async () => {
+      renderPage()
+      await waitFor(() => expect(getEvents).toHaveBeenCalledTimes(1))
+      vi.mocked(getEvents).mockResolvedValue(pageOf([]))
+
+      await userEvent.type(searchBox(), 'nothing{Enter}')
+
       expect(await screen.findByRole('cell', { name: 'No events found' })).toBeInTheDocument()
+      expect(screen.queryByText('No notification events yet.')).not.toBeInTheDocument()
     })
 
     it('surfaces a failed load as a toast, since the table can only show an empty state', async () => {
