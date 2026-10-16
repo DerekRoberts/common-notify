@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import TablePaginationFooter from './pagination/TablePaginationFooter'
-import TableEmptyState, { getEmptyMessage } from './TableEmptyState'
-import type { NarrowedBy } from './TableEmptyState'
+import TableEmptyState, { getEmptyMessage, getNarrowing } from './TableEmptyState'
 import { Table } from './Table'
 import { TableBody } from './TableBody'
 import { TableCell } from './TableCell'
@@ -108,18 +107,9 @@ export function DataTable<T extends object>({
   data = data ?? []
 
   const showEmpty = !isLoading && (isEmpty || data.length === 0)
-  const filterKeys = Object.keys(activeFilters ?? {})
-  const narrowedBy: NarrowedBy | null =
-    search && onClearSearch ? 'search' : filterKeys.length > 0 && onFilter ? 'filter' : null
-  function clearNarrowing() {
-    if (narrowedBy === 'search') {
-      onClearSearch?.()
-    } else {
-      filterKeys.forEach((key) => onFilter?.(key, []))
-    }
-  }
+  const narrowing = getNarrowing(search, onClearSearch, activeFilters, onFilter)
   // A search or filter that emptied the table: there are no pages to move between.
-  const showNarrowedEmpty = showEmpty && narrowedBy != null
+  const showNarrowedEmpty = showEmpty && narrowing != null
   const showPagination =
     onPageChange != null && totalCount != null && currentPage != null && !showNarrowedEmpty
 
@@ -134,17 +124,7 @@ export function DataTable<T extends object>({
 
     if (showEmpty) {
       return (
-        <TableRow
-          className={`data-table__empty-row${showNarrowedEmpty ? ' data-table__empty-row--action' : ''}`}
-        >
-          <TableCell colSpan={columns.length}>
-            <TableEmptyState
-              narrowedBy={narrowedBy}
-              message={emptyMessage}
-              onClear={clearNarrowing}
-            />
-          </TableCell>
-        </TableRow>
+        <TableEmptyState narrowing={narrowing} message={emptyMessage} colSpan={columns.length} />
       )
     }
 
@@ -185,7 +165,7 @@ export function DataTable<T extends object>({
   const statusMessage = isLoading
     ? 'Loading'
     : showEmpty
-      ? getEmptyMessage(narrowedBy, emptyMessage)
+      ? getEmptyMessage(narrowing, emptyMessage)
       : currentPage != null && totalCount != null
         ? (() => {
             const totalPages = Math.ceil(totalCount / pageSize)
