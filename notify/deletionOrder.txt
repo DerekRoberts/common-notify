@@ -8,7 +8,6 @@ flyway_schema_history
 event_channel_setting_history
 event_channel_recipient_history
 event_channel_cstar_group_history
-configuration
 event_channel_recipient
 event_channel_cstar_group
 api_key_limit_alert_log
@@ -31,8 +30,8 @@ channel_recipient_kind
 api_key_consumer
 provisioned_phone_number
 notification_event
-template
 email_logo
+template
 tenant
 webhook_type
 tenant_status_code
@@ -42,6 +41,7 @@ feature_flag_code
 event_recipient_kind_code
 email_logo_status_code
 email_logo_source_code
+configuration
 usage_period_type_code
 template_engine_code
 notification_status_code

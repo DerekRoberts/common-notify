@@ -7,8 +7,12 @@ digraph "twoDegreesRelationshipsDiagram" {
   "api_key_limit_alert_log":"period_type_code":w -> "usage_period_type_code":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
   "attachment":"elipses":w -> "tenant":"id":e [arrowhead=none dir=back arrowtail=crowodot];
   "client_tenant_mapping":"elipses":w -> "tenant":"id":e [arrowhead=none dir=back arrowtail=crowodot];
+  "event_channel_setting":"elipses":w -> "notification_channel_code":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
+  "event_channel_setting":"elipses":w -> "notification_event":"id":e [arrowhead=none dir=back arrowtail=crowodot];
+  "event_channel_setting":"elipses":w -> "provisioned_phone_number":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
   "feature_flag":"elipses":w -> "tenant":"id":e [arrowhead=none dir=back arrowtail=crowodot];
-  "notification_event":"elipses":w -> "tenant":"id":e [arrowhead=none dir=back arrowtail=teeodot];
+  "notification_event":"tenant_id":w -> "tenant":"id":e [arrowhead=none dir=back arrowtail=teeodot];
+  "notification_request":"event_id":w -> "notification_event":"id":e [arrowhead=none dir=back arrowtail=crowodot];
   "notification_request":"status":w -> "notification_status_code":"code":e [arrowhead=none dir=back arrowtail=crowodot];
   "notification_request":"tenant_id":w -> "tenant":"id":e [arrowhead=none dir=back arrowtail=crowodot];
   "notification_request_detail":"channel":w -> "notification_channel_code":"elipses":e [arrowhead=none dir=back arrowtail=crowodot];
@@ -74,6 +78,17 @@ digraph "twoDegreesRelationshipsDiagram" {
     target="_top"
     tooltip="client_tenant_mapping"
   ];
+  "event_channel_setting" [
+   label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
+      <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="133" HEIGHT="16"><B>event_channel_setting</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
+      <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 5</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">4 &gt;</TD></TR>
+    </TABLE>>
+    URL="event_channel_setting.html"
+    target="_top"
+    tooltip="event_channel_setting"
+  ];
   "feature_flag" [
    label=<
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
@@ -101,7 +116,7 @@ digraph "twoDegreesRelationshipsDiagram" {
     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" BGCOLOR="#ffffff">
       <TR><TD COLSPAN="3"  BGCOLOR="#f5f5f5"><TABLE BORDER="0" CELLSPACING="0"><TR><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="109" HEIGHT="16"><B>notification_event</B></TD><TD ALIGN="RIGHT">[table]</TD></TR></TABLE></TD></TR>
       <TR><TD PORT="elipses" COLSPAN="3" ALIGN="LEFT">...</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">1 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 1</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">2 &gt;</TD></TR>
     </TABLE>>
     URL="notification_event.html"
     target="_top"
@@ -126,7 +141,8 @@ digraph "twoDegreesRelationshipsDiagram" {
       <TR><TD PORT="is_internal" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="121" HEIGHT="16">is_internal</TD></TR></TABLE></TD><TD PORT="is_internal.type" ALIGN="LEFT">bool[1]</TD></TR>
       <TR><TD PORT="request_route" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="121" HEIGHT="16">request_route</TD></TR></TABLE></TD><TD PORT="request_route.type" ALIGN="LEFT">varchar[255]</TD></TR>
       <TR><TD PORT="channel_codes" COLSPAN="2" BGCOLOR="#ffffff" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="121" HEIGHT="16">channel_codes</TD></TR></TABLE></TD><TD PORT="channel_codes.type" ALIGN="LEFT">jsonb[2147483647]</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 2</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">3 &gt;</TD></TR>
+      <TR><TD PORT="event_id" COLSPAN="2" BGCOLOR="#ffffff" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"><IMG SRC="../../images/foreignKeys.png"/></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="121" HEIGHT="16">event_id</TD></TR></TABLE></TD><TD PORT="event_id.type" ALIGN="LEFT">uuid[2147483647]</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 3</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">3 &gt;</TD></TR>
     </TABLE>>
     URL="notification_request.html"
     target="_top"

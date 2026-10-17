@@ -250,7 +250,9 @@
          </index>
       </table>
       <table name="configuration" remarks="Stores application configuration values as JSONB for runtime validation and limits." schema="notify" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="key" nullable="false" remarks="Unique configuration key. Primary key." size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="key" nullable="false" remarks="Unique configuration key. Primary key." size="255" type="varchar" typeCode="12">
+            <child column="email_file_key" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="notify" table="email_logo"/>
+         </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="config" nullable="false" remarks="Configuration payload stored as JSONB. Includes value, type, and description metadata." size="2147483647" type="jsonb" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="now()" digits="6" id="2" name="created_at" nullable="false" remarks="Timestamp when the configuration record was created." size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="created_by" nullable="true" remarks="User or process that created this record." size="200" type="varchar" typeCode="12"/>
@@ -288,6 +290,9 @@
          <column autoUpdated="false" defaultValue="false" digits="0" id="10" name="is_deleted" nullable="false" remarks="Soft delete flag. When true, the email logo is considered inactive." size="1" type="bool" typeCode="-7"/>
          <column autoUpdated="false" defaultValue="false" digits="0" id="11" name="is_default" nullable="false" remarks="System default used when no email logo is selected." size="1" type="bool" typeCode="-7"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="display_title" nullable="true" remarks="Public-facing organization title displayed beside the email logo; independent of picker labels." size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="email_file_key" nullable="true" remarks="Object key of the rendition used in emails (PNG). NULL falls back to file_key." size="255" type="varchar" typeCode="12">
+            <parent column="key" foreignKey="Implied Constraint" implied="true" onDeleteCascade="false" schema="notify" table="configuration"/>
+         </column>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="email_logo_pkey" unique="true">
             <column ascending="true" name="id"/>
@@ -659,6 +664,7 @@
       <table name="notification_event" remarks="A tenant-owned, named notification definition. Per-channel configuration lives in notify.event_channel_setting, and its recipients in notify.event_channel_recipient." schema="notify" type="TABLE">
          <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="Unique identifier for the event." size="2147483647" type="uuid" typeCode="1111">
             <child column="event_id" foreignKey="fk_event_channel_setting_event" implied="false" onDeleteCascade="true" schema="notify" table="event_channel_setting"/>
+            <child column="event_id" foreignKey="fk_notification_request_event" implied="false" onDeleteCascade="false" schema="notify" table="notification_request"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="tenant_id" nullable="false" remarks="Tenant that owns this event. Cascade deleted with the tenant." size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="fk_notification_event_tenant" implied="false" onDeleteCascade="true" schema="notify" table="tenant"/>
@@ -742,6 +748,9 @@
          <column autoUpdated="false" defaultValue="false" digits="0" id="12" name="is_internal" nullable="false" remarks="Whether the notification was generated internally rather than initiated by a tenant." size="1" type="bool" typeCode="-7"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="request_route" nullable="true" remarks="API route that accepted the request, relative to the versioned prefix (e.g. 'notifysimple', 'notifysimple/email', 'notifysimple/sms'). Nullable for records created before this column existed." size="255" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="channel_codes" nullable="true" remarks="Channels this request targeted, as a JSONB array of channel codes (e.g. [&quot;EMAIL&quot;,&quot;SMS&quot;]). Values reference notification_channel_code.channel_code but are not FK-enforced." size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="event_id" nullable="true" remarks="The event this request was generated from, when it came from one. NULL for every other send. The delivery worker reads it to apply the event's sender address and custom header." size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="fk_notification_request_event" implied="false" onDeleteCascade="false" schema="notify" table="notification_event"/>
+         </column>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="notification_request_pkey" unique="true">
             <column ascending="true" name="id"/>
@@ -751,6 +760,9 @@
          </index>
          <index name="idx_notification_request_delayed_send" unique="false">
             <column ascending="true" name="delayed_send_time"/>
+         </index>
+         <index name="idx_notification_request_event" unique="false">
+            <column ascending="true" name="event_id"/>
          </index>
          <index name="idx_notification_request_status_error" unique="false">
             <column ascending="true" name="status"/>
