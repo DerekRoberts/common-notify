@@ -1,12 +1,12 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject, Optional } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import Redis from 'ioredis'
-import Bull from 'bull'
+import type { Queue } from 'bullmq'
 import { WebhookService } from '../../api/webhook/webhook.service'
 import { WebhookJobPayload } from '../queue.types'
 import { QueueName } from '../../enum/queue-name.enum'
 import { NotificationRequestDto } from '../../api/notification/schemas/notification-request'
-import { COMPLETED_JOB_RETENTION, FAILED_JOB_RETENTION } from '../job-retention'
+import { WEBHOOK_JOB_OPTIONS } from '../job-options'
 import { buildRedisOptions } from '../redis-connection'
 
 /**
@@ -36,7 +36,7 @@ export class WebhookTriggerService implements OnModuleInit, OnModuleDestroy {
     private readonly webhookService: WebhookService,
     @Optional()
     @Inject(QueueName.WEBHOOK_DELIVERY)
-    private readonly webhookQueue?: Bull.Queue<WebhookJobPayload>,
+    private readonly webhookQueue?: Queue<WebhookJobPayload>,
   ) {}
 
   onModuleInit(): void {
@@ -138,14 +138,12 @@ export class WebhookTriggerService implements OnModuleInit, OnModuleDestroy {
       try {
         // Job ID includes status to allow one delivery per webhook per status transition
         const jobId = `webhook_${webhook.id}_${notification.id}_${notificationStatus}`
-        await this.webhookQueue!.add(jobPayload, {
+        // Every pod receives each status change and adds this job. Keeping the completed job
+        // (WEBHOOK_JOB_OPTIONS) is what lets BullMQ drop a slower pod's add as a duplicate
+        // instead of delivering it again.
+        await this.webhookQueue!.add(this.webhookQueue!.name, jobPayload, {
           jobId,
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 5000 },
-          // Every pod receives each status change and adds this job. Keeping the completed job is
-          // what lets Bull drop a slower pod's add as a duplicate instead of delivering it again.
-          removeOnComplete: COMPLETED_JOB_RETENTION,
-          removeOnFail: FAILED_JOB_RETENTION,
+          ...WEBHOOK_JOB_OPTIONS,
         })
         this.logger.log(
           `[${notification.id}] Queued webhook delivery for webhook=${webhook.id} (status=${notificationStatus})`,
