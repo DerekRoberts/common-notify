@@ -111,9 +111,10 @@ export interface TemplateFormData {
   body: string
 }
 
-interface TemplateFormProps {
-  mode: 'create' | 'edit'
-  initialValues?: TemplateFormData
+type TemplateFormProps = (
+  | { mode: 'create'; initialValues?: never }
+  | { mode: 'edit'; initialValues: TemplateFormData }
+) & {
   isReadOnly?: boolean
   onSave: (values: TemplateFormData) => Promise<void>
   onCancel: () => void
@@ -187,24 +188,20 @@ const TemplateForm: FC<TemplateFormProps> = ({
 
   const handleSave = async (e: React.SyntheticEvent) => {
     e.preventDefault()
-    if (!validate()) return
+    if (isReadOnly || saving || !validate()) return
     setSaving(true)
     try {
       await onSave(formData)
     } catch (error) {
-      if ((error as { status?: number }).status === 409) {
+      if ((error as { status?: number } | null)?.status === 409) {
         setFormErrors((prev) => ({
           ...prev,
           name: error instanceof Error ? error.message : 'Template name already exists',
         }))
       } else {
-        showErrorToast(
-          error instanceof Error
-            ? error.message
-            : mode === 'create'
-              ? 'Failed to create template'
-              : 'Failed to save template',
-        )
+        const fallbackMessage =
+          mode === 'create' ? 'Failed to create template' : 'Failed to save template'
+        showErrorToast(error instanceof Error ? error.message : fallbackMessage)
       }
     } finally {
       setSaving(false)
@@ -238,10 +235,7 @@ const TemplateForm: FC<TemplateFormProps> = ({
               className="template-form__radio-group"
               label={(<RequiredLabel text="Template type" />) as unknown as string}
               value={formData.channelCode}
-              onChange={(value) => {
-                setFormData((prev) => ({ ...prev, channelCode: value }))
-                setFormErrors((prev) => ({ ...prev, channelCode: '' }))
-              }}
+              onChange={handleFieldChange('channelCode')}
               aria-required="true"
               isDisabled={mode === 'edit' || isReadOnly}
               isInvalid={!!formErrors.channelCode}
@@ -280,16 +274,7 @@ const TemplateForm: FC<TemplateFormProps> = ({
               label={(<RequiredLabel text="Syntax type" />) as unknown as string}
               description="Choose the syntax used for dynamic variables and placeholders in this template."
               value={formData.engineCode}
-              onChange={(value) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  engineCode: value,
-                }))
-                setFormErrors((prev) => ({
-                  ...prev,
-                  engineCode: '',
-                }))
-              }}
+              onChange={handleFieldChange('engineCode')}
               aria-required="true"
               isDisabled={isReadOnly}
               isInvalid={!!formErrors.engineCode}
