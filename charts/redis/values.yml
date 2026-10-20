@@ -1,6 +1,8 @@
 # Redis configuration for job queues and caching
 # Based on BC Gov OpenShift best practices - using Sentinel architecture
 # Storage quota freed - ready for automated deployment
+# Only a change under charts/redis/ redeploys this release; .deployer.yml gates
+# the step on redis_triggers. A backend-only change will not roll Redis.
 architecture: replication
 global:
   storageClass: netapp-block-standard

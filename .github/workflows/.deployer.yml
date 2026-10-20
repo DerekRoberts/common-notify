@@ -119,6 +119,10 @@ jobs:
           oc_token: ${{ secrets.oc_token || secrets.OC_TOKEN || secrets.OC_DEV_TOKEN }}
           oc_server: ${{ inputs.oc_server }}
           triggers: ${{ inputs.redis_triggers }}
+          # diff_branch defaults to the default branch, so on a push to main this
+          # compared main against itself: empty diff, step skipped while still
+          # reporting success. HEAD^ is the previous main.
+          diff_branch: ${{ github.event_name == 'pull_request' && github.event.repository.default_branch || 'HEAD^' }}
           ref: ${{ github.ref }}
           commands: |
             # Deploy Redis using Bitnami Helm chart
