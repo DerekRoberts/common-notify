@@ -111,14 +111,24 @@ export interface TemplateFormData {
   body: string
 }
 
-type TemplateFormProps = (
-  { mode: 'create'; initialValues?: never } | { mode: 'edit'; initialValues: TemplateFormData }
-) & {
+interface TemplateFormCommonProps {
   isReadOnly?: boolean
   onSave: (values: TemplateFormData) => Promise<void>
   onCancel: () => void
   children?: ReactNode
 }
+
+interface TemplateCreateFormProps extends TemplateFormCommonProps {
+  mode: 'create'
+  initialValues?: never
+}
+
+interface TemplateEditFormProps extends TemplateFormCommonProps {
+  mode: 'edit'
+  initialValues: TemplateFormData
+}
+
+type TemplateFormProps = TemplateCreateFormProps | TemplateEditFormProps
 
 const TemplateForm: FC<TemplateFormProps> = ({
   mode,
