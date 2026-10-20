@@ -104,9 +104,9 @@ export function DataTable<T extends object>({
   onFilter,
   onRowClick,
 }: TableProps<T>) {
-  data = data ?? []
+  const rows = data ?? []
 
-  const showEmpty = !isLoading && (isEmpty || data.length === 0)
+  const showEmpty = !isLoading && (isEmpty || rows.length === 0)
   const narrowing = getNarrowing(search, onClearSearch, activeFilters, onFilter)
   // A search or filter that emptied the table: there are no pages to move between.
   const showNarrowedEmpty = showEmpty && narrowing != null
@@ -128,7 +128,7 @@ export function DataTable<T extends object>({
       )
     }
 
-    return data.map((row) => (
+    return rows.map((row) => (
       <TableRow
         key={keyExtractor(row)}
         className={onRowClick ? 'data-table__clickable-row' : undefined}
@@ -173,7 +173,7 @@ export function DataTable<T extends object>({
             const end = Math.min(currentPage * pageSize, totalCount)
             return `Page ${currentPage} of ${totalPages}, showing ${start}\u2013${end} of ${totalCount} items`
           })()
-        : `${data.length} row${data.length === 1 ? '' : 's'}`
+        : `${rows.length} row${rows.length === 1 ? '' : 's'}`
 
   return (
     <>
