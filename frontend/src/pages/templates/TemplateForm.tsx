@@ -112,8 +112,7 @@ export interface TemplateFormData {
 }
 
 type TemplateFormProps = (
-  | { mode: 'create'; initialValues?: never }
-  | { mode: 'edit'; initialValues: TemplateFormData }
+  { mode: 'create'; initialValues?: never } | { mode: 'edit'; initialValues: TemplateFormData }
 ) & {
   isReadOnly?: boolean
   onSave: (values: TemplateFormData) => Promise<void>
